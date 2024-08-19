@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# This script adds the lumos.sh script to startup.
+
+# Define the path to the lumos script
+SCRIPT_PATH="$(realpath ./lumos)" # Use absolute path
+AUTOSTART_DIR="$HOME/.config/autostart"
+AUTOSTART_FILE="$AUTOSTART_DIR/lumos.desktop"
+
+# Check if the script exists
+if [ ! -f "$SCRIPT_PATH" ]; then
+    echo "Error: $SCRIPT_PATH does not exist."
+    exit 1
+fi
+
+# Create the autostart directory if it doesn't exist
+mkdir -p "$AUTOSTART_DIR"
+
+# Create the .desktop file for autostart
+cat > "$AUTOSTART_FILE" <<EOL
+[Desktop Entry]
+Type=Application
+Exec=$SCRIPT_PATH -b
+Hidden=false
+NoDisplay=false
+X-GNOME-Autostart-enabled=true
+Name=Lumos
+Comment=Script to prevent lock screen from fading (for GNOME Shell)
+EOL
+
+echo "Lumos has been added to startup."

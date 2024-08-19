@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Paths
+AUTOSTART_DIR="$HOME/.config/autostart"
+DESKTOP_FILE="lumos.desktop"
+
+# Remove autostart entry
+if [ -f "$AUTOSTART_DIR/$DESKTOP_FILE" ]; then
+    echo "Removing autostart entry for lumos."
+    rm "$AUTOSTART_DIR/$DESKTOP_FILE"
+    echo "Autostart entry removed successfully."
+else
+    echo "Autostart entry not found."
+fi

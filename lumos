@@ -1,0 +1,103 @@
+#!/bin/bash
+
+# Path to the PID file
+PIDFILE="/tmp/$(basename "$0").pid"
+GNOME_PIDFILE="/tmp/gnome_session_inhibit.pid"
+
+# Function to display usage information
+show_help() {
+    cat <<EOF
+
+Usage: ./$(basename "$0") [OPTION]
+
+Script to prevent lock screen from fading (for GNOME Shell).
+
+Options:
+  -b, --background  Run lumos in the background.
+  -h, --help        Show this help message and exit.
+  -s, --stop        Stop lumos if it's running in the background.
+
+EOF
+}
+
+# Function to handle cleanup
+cleanup() {
+    echo "Cleaning up..."
+    if [ -f "$GNOME_PIDFILE" ]; then
+        GNOME_PID=$(cat "$GNOME_PIDFILE")
+        kill "$GNOME_PID" 2>/dev/null
+        rm -f "$GNOME_PIDFILE"
+    fi
+    exit 0
+}
+
+# Trap signals to perform cleanup
+trap cleanup SIGINT SIGTERM
+
+# Main script logic
+prevent_fading() {
+    echo "Preventing lock screen from fading..."
+    while :; do
+        # Inhibit the GNOME screensaver
+        gnome-session-inhibit --inhibit-only --reason "lumos" --mode block &
+        echo $! > "$GNOME_PIDFILE"
+        wait $! # Wait for the inhibit command to finish, which is usually never
+        sleep 600
+    done
+}
+
+# Function to start the script in the background
+start_background() {
+    if [ -f "$PIDFILE" ]; then
+        echo "Script is already running."
+        exit 1
+    fi
+
+    # Run the script in the background using nohup
+    nohup "$0" > /tmp/lumos.log 2>&1 &
+
+    # Save the PID of the background process
+    echo $! > "$PIDFILE"
+
+    echo "Lumos is running in the background. Check /tmp/lumos.log for status."
+}
+
+# Function to stop the script
+stop_script() {
+    if [ -f "$PIDFILE" ]; then
+        # Read the PID of the running script
+        SCRIPT_PID=$(cat "$PIDFILE")
+        # Kill the script
+        kill "$SCRIPT_PID" 2>/dev/null
+
+        # Remove the PID file
+        rm -f "$PIDFILE"
+        echo "Lumos has been stopped."
+
+        # Kill the gnome-session-inhibit process if it exists
+        if [ -f "$GNOME_PIDFILE" ]; then
+            GNOME_PID=$(cat "$GNOME_PIDFILE")
+            kill "$GNOME_PID" 2>/dev/null
+            rm -f "$GNOME_PIDFILE"
+            # echo "gnome-session-inhibit process has been stopped."
+        fi
+    else
+        echo "Lumos is not running."
+    fi
+}
+
+# Parse command line arguments
+case "$1" in
+    -b|--background)
+        start_background
+        ;;
+    -h|--help)
+        show_help
+        ;;
+    -s|--stop)
+        stop_script
+        ;;
+    *)
+        prevent_fading
+        ;;
+esac
