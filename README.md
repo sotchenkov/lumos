@@ -3,7 +3,7 @@
 <p align="center"> <img src="./assets/lockscreen.png" width="350">
 
 ## 📖 What's it?
-Script to prevent lock screen from fading for GNOME Shell
+Script to prevent lockscreen from fading to black (for GNOME Shell) 
 
 ## ⚙️ Usage
 Clone the repo and go to the project folder:
